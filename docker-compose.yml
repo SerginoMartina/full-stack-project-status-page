@@ -1,0 +1,51 @@
+services:
+  # Database: PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: status_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: status_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Cache: Redis
+  cache:
+    image: redis:7-alpine
+    container_name: status_cache
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # Backend: Node.js / Express
+  backend:
+    build: ./backend
+    container_name: status_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/status_db
+      REDIS_URL: redis://cache:6379
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+      - cache
+
+  # Frontend: Next.js
+  frontend:
+    build: ./frontend
+    container_name: status_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5001
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
