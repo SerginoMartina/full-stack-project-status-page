@@ -30,11 +30,13 @@ const initDb = async () => {
         last_checked TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       
-      INSERT INTO services (name, url, status) VALUES 
-      ('Google', 'https://www.google.com', 'unknown'),
-      ('GitHub', 'https://github.com', 'unknown'),
-      ('Next.js', 'https://nextjs.org', 'unknown')
-      ON CONFLICT DO NOTHING;
+      CREATE TABLE IF NOT EXISTS pings (
+        id SERIAL PRIMARY KEY,
+        service_id INTEGER REFERENCES services(id),
+        url TEXT,
+        status VARCHAR(50),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `);
     console.log("Database initialized.");
     client.release();
@@ -68,6 +70,10 @@ setInterval(async () => {
       "UPDATE services SET status = $1, last_checked = CURRENT_TIMESTAMP WHERE id = $2",
       [status, service.id],
     );
+    await pool.query(
+      "INSERT INTO pings (service_id, url, status) VALUES ($1, $2, $3)",
+      [service.id, service.url, status],
+    );
   }
   console.log("Status check complete.");
 }, 60000); // Every 60 seconds
@@ -93,6 +99,37 @@ app.get("/health", async (req, res) => {
 app.get("/services", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM services ORDER BY id ASC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/services", async (req, res) => {
+  const { name, url } = req.body;
+  if (!name || !url) {
+    return res.status(400).json({ error: "Name and URL are required" });
+  }
+  try {
+    const result = await pool.query(
+      "INSERT INTO services (name, url, status) VALUES ($1, $2, 'unknown') RETURNING *",
+      [name, url]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/pings", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT p.*, s.name 
+      FROM pings p 
+      JOIN services s ON p.service_id = s.id 
+      ORDER BY p.timestamp DESC 
+      LIMIT 100
+    `);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });

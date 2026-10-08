@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d status_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # Cache: Redis
   cache:
@@ -20,6 +25,11 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # Backend: Node.js / Express
   backend:
@@ -32,8 +42,10 @@ services:
     ports:
       - "5001:5000"
     depends_on:
-      - db
-      - cache
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
 
   # Frontend: Next.js
   frontend:
