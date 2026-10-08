@@ -31,7 +31,71 @@ export default function Home() {
         minHeight: "100vh",
       }}
     >
-      <h1 style={{ marginBottom: "1.5rem" }}>🚀 Service Status Dashboard</h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "2rem",
+          paddingBottom: "1rem",
+          borderBottom: "1px solid #ddd",
+        }}
+      >
+        <h1 style={{ margin: 0 }}>🚀 Service Status Dashboard</h1>
+        <nav>
+          <a
+            href="/"
+            style={{
+              marginRight: "1.5rem",
+              textDecoration: "none",
+              color: "#0070f3",
+              fontWeight: "bold",
+            }}
+          >
+            Dashboard
+          </a>
+          <a
+            href="/pings"
+            style={{
+              textDecoration: "none",
+              color: "#666",
+              fontWeight: "bold",
+            }}
+          >
+            Ping Logs
+          </a>
+        </nav>
+      </div>
+
+      <div
+        style={{
+          marginBottom: "2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Active Services</h2>
+        <button
+          onClick={() =>
+            document.getElementById("add-service-form").scrollIntoView({
+              behavior: "smooth",
+            })
+          }
+          style={{
+            padding: "0.6rem 1.2rem",
+            backgroundColor: "#0070f3",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          + Add New Service
+        </button>
+      </div>
+
       <div
         style={{
           display: "grid",
