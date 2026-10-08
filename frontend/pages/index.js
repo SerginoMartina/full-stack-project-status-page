@@ -4,6 +4,7 @@ export default function Home() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`)
@@ -22,6 +23,32 @@ export default function Home() {
   if (error)
     return <div style={{ padding: "2rem", color: "red" }}>Error: {error}</div>;
 
+  const handleAddService = async (e) => {
+    e.preventDefault();
+    const name = e.target.name.value;
+    const url = e.target.url.value;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/services`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, url }),
+        },
+      );
+      const newData = await res.json();
+      if (res.ok) {
+        setServices((prev) => [...prev, newData]);
+        setIsModalOpen(false);
+        e.target.reset();
+      } else {
+        alert(newData.error);
+      }
+    } catch (err) {
+      alert("Failed to add service");
+    }
+  };
+
   return (
     <div
       style={{
@@ -29,6 +56,7 @@ export default function Home() {
         fontFamily: "sans-serif",
         backgroundColor: "#f4f4f9",
         minHeight: "100vh",
+        position: "relative",
       }}
     >
       <div
@@ -77,11 +105,7 @@ export default function Home() {
       >
         <h2 style={{ margin: 0 }}>Active Services</h2>
         <button
-          onClick={() =>
-            document.getElementById("add-service-form").scrollIntoView({
-              behavior: "smooth",
-            })
-          }
+          onClick={() => setIsModalOpen(true)}
           style={{
             padding: "0.6rem 1.2rem",
             backgroundColor: "#0070f3",
@@ -166,88 +190,103 @@ export default function Home() {
         ))}
       </div>
 
-      <div
-        style={{
-          marginTop: "3rem",
-          padding: "2rem",
-          backgroundColor: "white",
-          borderRadius: "12px",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h2 style={{ marginBottom: "1rem" }}>Add New Service</h2>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const name = e.target.name.value;
-            const url = e.target.url.value;
-            try {
-              const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/services`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ name, url }),
-                },
-              );
-              const newData = await res.json();
-              if (res.ok) {
-                setServices((prev) => [...prev, newData]);
-                e.target.reset();
-              } else {
-                alert(newData.error);
-              }
-            } catch (err) {
-              alert("Failed to add service");
-            }
+      {/* Modal Overlay */}
+      {isModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
           }}
+          onClick={() => setIsModalOpen(false)}
         >
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              Name:
-            </label>
-            <input
-              name="name"
-              required
-              style={{
-                padding: "0.5rem",
-                width: "100%",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: "1rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>
-              URL:
-            </label>
-            <input
-              name="url"
-              type="url"
-              required
-              style={{
-                padding: "0.5rem",
-                width: "100%",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-              }}
-            />
-          </div>
-          <button
-            type="submit"
+          <div
             style={{
-              padding: "0.5rem 1rem",
-              backgroundColor: "#0070f3",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
+              backgroundColor: "white",
+              padding: "2rem",
+              borderRadius: "12px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+              maxWidth: "400px",
+              width: "90%",
+              position: "relative",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            Add Service
-          </button>
-        </form>
-      </div>
+            <h2 style={{ marginBottom: "1rem" }}>Add New Service</h2>
+            <form
+              onSubmit={handleAddService}
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <div>
+                <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                  Name:
+                </label>
+                <input
+                  name="name"
+                  required
+                  style={{
+                    padding: "0.5rem",
+                    width: "100%",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                  URL:
+                </label>
+                <input
+                  name="url"
+                  type="url"
+                  required
+                  style={{
+                    padding: "0.5rem",
+                    width: "100%",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#eee",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#0070f3",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add Service
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
