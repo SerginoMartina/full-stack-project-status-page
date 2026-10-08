@@ -7,12 +7,15 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.service }} image
+        run: docker build ./${{ matrix.service }} --file ./${{ matrix.service }}/Dockerfile --tag ${{ matrix.service }}:$(date +%s)
