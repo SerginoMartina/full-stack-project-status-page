@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { fetchApiJson } from '../lib/api';
 
 export default function Pings() {
   const [pings, setPings] = useState([]);
@@ -11,15 +13,12 @@ export default function Pings() {
     const fetchData = async () => {
       try {
         const [pingsRes, servicesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/pings`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`),
+          fetchApiJson('/pings'),
+          fetchApiJson('/services'),
         ]);
 
-        const pingsData = await pingsRes.json();
-        const servicesData = await servicesRes.json();
-
-        setPings(pingsData);
-        setServices(servicesData);
+        setPings(pingsRes);
+        setServices(servicesRes);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -35,7 +34,11 @@ export default function Pings() {
       ? pings 
       : pings.filter(ping => ping.service_id === parseInt(selectedServiceId));
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading data...</div>;
+  if (loading) {
+    return (
+      <LoadingSpinner message="Loading data... The backend may take up to a minute to wake after inactivity." />
+    );
+  }
   if (error) return <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>;
 
   return (

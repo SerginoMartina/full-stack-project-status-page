@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { fetchApiJson } from "../lib/api";
 
 export default function Home() {
   const [services, setServices] = useState([]);
@@ -7,8 +9,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/services`)
-      .then((res) => res.json())
+    fetchApiJson("/services")
       .then((data) => {
         setServices(data);
         setLoading(false);
@@ -19,7 +20,10 @@ export default function Home() {
       });
   }, []);
 
-  if (loading) return <div style={{ padding: "2rem" }}>Loading status...</div>;
+  if (loading)
+    return (
+      <LoadingSpinner message="Loading status... The backend may take up to a minute to wake after inactivity." />
+    );
   if (error)
     return <div style={{ padding: "2rem", color: "red" }}>Error: {error}</div>;
 
@@ -28,24 +32,16 @@ export default function Home() {
     const name = e.target.name.value;
     const url = e.target.url.value;
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/services`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, url }),
-        },
-      );
-      const newData = await res.json();
-      if (res.ok) {
-        setServices((prev) => [...prev, newData]);
-        setIsModalOpen(false);
-        e.target.reset();
-      } else {
-        alert(newData.error);
-      }
+      const newData = await fetchApiJson("/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, url }),
+      });
+      setServices((prev) => [...prev, newData]);
+      setIsModalOpen(false);
+      e.target.reset();
     } catch (err) {
-      alert("Failed to add service");
+      alert(err.message || "Failed to add service");
     }
   };
 

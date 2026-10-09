@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { fetchApiJson } from "../../lib/api";
 
 export default function ServiceDetails() {
   const router = useRouter();
@@ -14,21 +16,10 @@ export default function ServiceDetails() {
 
     const fetchServiceDetails = async () => {
       try {
-        const [serviceRes, pingsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/services/${serviceId}`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/services/${serviceId}/pings`),
-        ]);
         const [serviceData, pingsData] = await Promise.all([
-          serviceRes.json(),
-          pingsRes.json(),
+          fetchApiJson(`/services/${serviceId}`),
+          fetchApiJson(`/services/${serviceId}/pings`),
         ]);
-
-        if (!serviceRes.ok) {
-          throw new Error(serviceData.error || "Failed to load service.");
-        }
-        if (!pingsRes.ok) {
-          throw new Error(pingsData.error || "Failed to load ping logs.");
-        }
 
         setService(serviceData);
         setPings(pingsData);
@@ -42,7 +33,11 @@ export default function ServiceDetails() {
     fetchServiceDetails();
   }, [router.isReady, serviceId]);
 
-  if (loading) return <div style={{ padding: "2rem" }}>Loading service...</div>;
+  if (loading) {
+    return (
+      <LoadingSpinner message="Loading service... The backend may take up to a minute to wake after inactivity." />
+    );
+  }
   if (error) {
     return <div style={{ padding: "2rem", color: "red" }}>Error: {error}</div>;
   }
