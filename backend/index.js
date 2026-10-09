@@ -19,8 +19,9 @@ redisClient.on("error", (err) => console.error("Redis Client Error", err));
 
 // Database Initialization - Run on startup
 const initDb = async () => {
+  let client;
   try {
-    const client = await pool.connect();
+    client = await pool.connect();
     await client.query(`
       CREATE TABLE IF NOT EXISTS services (
         id SERIAL PRIMARY KEY,
@@ -38,10 +39,19 @@ const initDb = async () => {
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS services_name_unique_idx
+      ON services (LOWER(BTRIM(name)))
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS services_url_unique_idx
+      ON services (LOWER(BTRIM(url)))
+    `);
     console.log("Database initialized.");
-    client.release();
   } catch (err) {
     console.error("Database initialization error:", err);
+  } finally {
+    client?.release();
   }
 };
 
@@ -107,15 +117,74 @@ app.get("/services", async (req, res) => {
 
 app.post("/services", async (req, res) => {
   const { name, url } = req.body;
-  if (!name || !url) {
+  if (typeof name !== "string" || typeof url !== "string" || !name.trim() || !url.trim()) {
     return res.status(400).json({ error: "Name and URL are required" });
   }
+
+  const normalizedName = name.trim();
+  const normalizedUrl = url.trim();
+
   try {
+    const duplicate = await pool.query(
+      `SELECT
+        EXISTS (SELECT 1 FROM services WHERE LOWER(BTRIM(name)) = LOWER($1)) AS duplicate_name,
+        EXISTS (SELECT 1 FROM services WHERE LOWER(BTRIM(url)) = LOWER($2)) AS duplicate_url`,
+      [normalizedName, normalizedUrl],
+    );
+    if (duplicate.rows[0].duplicate_name || duplicate.rows[0].duplicate_url) {
+      return res.status(409).json({
+        error: "A service with this name or URL already exists.",
+      });
+    }
+
     const result = await pool.query(
       "INSERT INTO services (name, url, status) VALUES ($1, $2, 'unknown') RETURNING *",
-      [name, url]
+      [normalizedName, normalizedUrl],
     );
     res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({
+        error: "A service with this name or URL already exists.",
+      });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/services/:id/pings", async (req, res) => {
+  const serviceId = Number(req.params.id);
+  if (!Number.isInteger(serviceId) || serviceId < 1) {
+    return res.status(400).json({ error: "Service ID must be a positive integer." });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, service_id, url, status, timestamp
+       FROM pings
+       WHERE service_id = $1
+       ORDER BY timestamp DESC
+       LIMIT 100`,
+      [serviceId],
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/services/:id", async (req, res) => {
+  const serviceId = Number(req.params.id);
+  if (!Number.isInteger(serviceId) || serviceId < 1) {
+    return res.status(400).json({ error: "Service ID must be a positive integer." });
+  }
+
+  try {
+    const result = await pool.query("SELECT * FROM services WHERE id = $1", [serviceId]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Service not found." });
+    }
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

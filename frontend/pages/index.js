@@ -128,13 +128,17 @@ export default function Home() {
         }}
       >
         {services.map((service) => (
-          <div
+          <a
             key={service.id}
+            href={`/services/${service.id}`}
             style={{
+              display: "block",
               padding: "1.5rem",
               backgroundColor: "white",
               borderRadius: "12px",
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+              color: "inherit",
+              textDecoration: "none",
               borderLeft:
                 service.status === "online"
                   ? "8px solid #4caf50"
@@ -186,7 +190,7 @@ export default function Home() {
                 {new Date(service.last_checked).toLocaleTimeString()}
               </small>
             </div>
-          </div>
+          </a>
         ))}
       </div>
 
