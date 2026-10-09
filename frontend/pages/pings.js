@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { fetchApiJson } from '../lib/api';
 
@@ -36,13 +37,31 @@ export default function Pings() {
 
   if (loading) {
     return (
-      <LoadingSpinner message="Loading data... The backend may take up to a minute to wake after inactivity." />
+      <>
+        <Head>
+          <title>Logs</title>
+        </Head>
+        <LoadingSpinner message="Loading data... The backend may take up to a minute to wake after inactivity." />
+      </>
     );
   }
-  if (error) return <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>;
+  if (error) {
+    return (
+      <>
+        <Head>
+          <title>Logs</title>
+        </Head>
+        <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>
+      </>
+    );
+  }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif', backgroundColor: '#f4f4f9', minHeight: '100vh' }}>
+    <>
+      <Head>
+        <title>Logs</title>
+      </Head>
+      <div style={{ padding: '2rem', fontFamily: 'sans-serif', backgroundColor: '#f4f4f9', minHeight: '100vh' }}>
       <div
         style={{
           display: "flex",
@@ -137,6 +156,7 @@ export default function Pings() {
       ) : (
         <p style={{ color: "#666" }}>No logs found for the selected service.</p>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { fetchApiJson } from "../../lib/api";
@@ -43,14 +44,18 @@ export default function ServiceDetails() {
   }
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "sans-serif",
-        backgroundColor: "#f4f4f9",
-        minHeight: "100vh",
-      }}
-    >
+    <>
+      <Head>
+        <title>{service.name}</title>
+      </Head>
+      <div
+        style={{
+          padding: "2rem",
+          fontFamily: "sans-serif",
+          backgroundColor: "#f4f4f9",
+          minHeight: "100vh",
+        }}
+      >
       <div
         style={{
           display: "flex",
@@ -138,6 +143,7 @@ export default function ServiceDetails() {
       ) : (
         <p style={{ color: "#666" }}>No ping logs found for this service yet.</p>
       )}
-    </div>
+      </div>
+    </>
   );
 }

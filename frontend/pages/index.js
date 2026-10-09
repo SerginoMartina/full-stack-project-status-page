@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Head from "next/head";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { fetchApiJson } from "../lib/api";
 
@@ -22,10 +23,22 @@ export default function Home() {
 
   if (loading)
     return (
-      <LoadingSpinner message="Loading status... The backend may take up to a minute to wake after inactivity." />
+      <>
+        <Head>
+          <title>Status page</title>
+        </Head>
+        <LoadingSpinner message="Loading status... The backend may take up to a minute to wake after inactivity." />
+      </>
     );
   if (error)
-    return <div style={{ padding: "2rem", color: "red" }}>Error: {error}</div>;
+    return (
+      <>
+        <Head>
+          <title>Status page</title>
+        </Head>
+        <div style={{ padding: "2rem", color: "red" }}>Error: {error}</div>
+      </>
+    );
 
   const handleAddService = async (e) => {
     e.preventDefault();
@@ -46,15 +59,19 @@ export default function Home() {
   };
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        fontFamily: "sans-serif",
-        backgroundColor: "#f4f4f9",
-        minHeight: "100vh",
-        position: "relative",
-      }}
-    >
+    <>
+      <Head>
+        <title>Status page</title>
+      </Head>
+      <div
+        style={{
+          padding: "2rem",
+          fontFamily: "sans-serif",
+          backgroundColor: "#f4f4f9",
+          minHeight: "100vh",
+          position: "relative",
+        }}
+      >
       <div
         style={{
           display: "flex",
@@ -287,6 +304,7 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
