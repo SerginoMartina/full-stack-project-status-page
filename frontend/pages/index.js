@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import LoadingSpinner from "../components/LoadingSpinner";
+import AnimatedWorldBackground from "../components/AnimatedWorldBackground";
 import { fetchApiJson } from "../lib/api";
 
 export default function Home() {
@@ -8,6 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null);
 
   useEffect(() => {
     fetchApiJson("/services")
@@ -40,22 +42,61 @@ export default function Home() {
       </>
     );
 
-  const handleAddService = async (e) => {
+  const handleSaveService = async (e) => {
     e.preventDefault();
     const name = e.target.name.value;
     const url = e.target.url.value;
     try {
-      const newData = await fetchApiJson("/services", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, url }),
-      });
-      setServices((prev) => [...prev, newData]);
+      const savedService = await fetchApiJson(
+        editingService ? `/services/${editingService.id}` : "/services",
+        {
+          method: editingService ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, url }),
+        },
+      );
+      if (editingService) {
+        setServices((prev) =>
+          prev.map((service) =>
+            service.id === savedService.id ? savedService : service,
+          ),
+        );
+      } else {
+        setServices((prev) => [...prev, savedService]);
+      }
       setIsModalOpen(false);
+      setEditingService(null);
       e.target.reset();
     } catch (err) {
-      alert(err.message || "Failed to add service");
+      alert(err.message || `Failed to ${editingService ? "update" : "add"} service`);
     }
+  };
+
+  const handleDeleteService = async (service) => {
+    if (
+      !window.confirm(
+        `Delete "${service.name}" and all of its ping and change logs? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await fetchApiJson(`/services/${service.id}`, { method: "DELETE" });
+      setServices((prev) => prev.filter((item) => item.id !== service.id));
+    } catch (err) {
+      alert(err.message || "Failed to delete service");
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingService(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (service) => {
+    setEditingService(service);
+    setIsModalOpen(true);
   };
 
   return (
@@ -63,13 +104,16 @@ export default function Home() {
       <Head>
         <title>Status page</title>
       </Head>
+      <AnimatedWorldBackground />
       <div
         style={{
           padding: "2rem",
           fontFamily: "sans-serif",
-          backgroundColor: "#f4f4f9",
+          backgroundColor: "rgba(16, 17, 18, 0.7)",
+          color: "#f1f1ef",
           minHeight: "100vh",
           position: "relative",
+          zIndex: 1,
         }}
       >
       <div
@@ -79,7 +123,7 @@ export default function Home() {
           alignItems: "center",
           marginBottom: "2rem",
           paddingBottom: "1rem",
-          borderBottom: "1px solid #ddd",
+          borderBottom: "1px solid #3b3d3f",
         }}
       >
         <h1 style={{ margin: 0 }}>🚀 Service Status Dashboard</h1>
@@ -95,11 +139,11 @@ export default function Home() {
       >
         <h2 style={{ margin: 0 }}>Active Services</h2>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openAddModal}
           style={{
             padding: "0.6rem 1.2rem",
-            backgroundColor: "#0070f3",
-            color: "white",
+            backgroundColor: "#e1e1de",
+            color: "#171819",
             border: "none",
             borderRadius: "8px",
             cursor: "pointer",
@@ -122,7 +166,7 @@ export default function Home() {
             key={service.id}
             style={{
               padding: "1.5rem",
-              backgroundColor: "white",
+              backgroundColor: "rgba(32, 34, 36, 0.94)",
               borderRadius: "12px",
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               color: "inherit",
@@ -145,7 +189,7 @@ export default function Home() {
             <p
               style={{
                 fontSize: "0.9rem",
-                color: "#666",
+                color: "#b7b9ba",
                 marginBottom: "1rem",
               }}
             >
@@ -154,7 +198,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  color: "#0070f3",
+                  color: "#d5d7d8",
                   overflowWrap: "anywhere",
                   textDecoration: "underline",
                   cursor: "pointer",
@@ -192,7 +236,7 @@ export default function Home() {
               >
                 {service.status.toUpperCase()}
               </span>
-              <small style={{ color: "#999" }}>
+              <small style={{ color: "#a2a5a6" }}>
                 {new Date(service.last_checked).toLocaleTimeString()}
               </small>
             </div>
@@ -203,8 +247,8 @@ export default function Home() {
                 marginTop: "1rem",
                 padding: "0.5rem 0.8rem",
                 borderRadius: "6px",
-                backgroundColor: "#0070f3",
-                color: "white",
+                backgroundColor: "#dededb",
+                color: "#171819",
                 textDecoration: "none",
                 fontWeight: "bold",
                 fontSize: "0.9rem",
@@ -212,6 +256,42 @@ export default function Home() {
             >
               Read logs
             </a>
+            <button
+              type="button"
+              onClick={() => openEditModal(service)}
+              style={{
+                marginTop: "1rem",
+                marginLeft: "0.5rem",
+                padding: "0.5rem 0.8rem",
+                borderRadius: "6px",
+                border: "1px solid #777b7d",
+                backgroundColor: "transparent",
+                color: "#e3e4e2",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+              }}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteService(service)}
+              style={{
+                marginTop: "1rem",
+                marginLeft: "0.5rem",
+                padding: "0.5rem 0.8rem",
+                borderRadius: "6px",
+                border: "1px solid #c62828",
+                backgroundColor: "#202224",
+                color: "#c62828",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+              }}
+            >
+              Delete
+            </button>
           </article>
         ))}
       </div>
@@ -235,7 +315,8 @@ export default function Home() {
         >
           <div
             style={{
-              backgroundColor: "white",
+              backgroundColor: "#202224",
+              color: "#f1f1ef",
               padding: "2rem",
               borderRadius: "12px",
               boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
@@ -245,9 +326,11 @@ export default function Home() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ marginBottom: "1rem" }}>Add New Service</h2>
+            <h2 style={{ marginBottom: "1rem" }}>
+              {editingService ? "Edit Service" : "Add New Service"}
+            </h2>
             <form
-              onSubmit={handleAddService}
+              onSubmit={handleSaveService}
               style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
             >
               <div>
@@ -257,11 +340,14 @@ export default function Home() {
                 <input
                   name="name"
                   required
+                  defaultValue={editingService?.name || ""}
                   style={{
                     padding: "0.5rem",
                     width: "100%",
                     borderRadius: "4px",
-                    border: "1px solid #ccc",
+                    border: "1px solid #55595b",
+                    backgroundColor: "#151617",
+                    color: "#f1f1ef",
                   }}
                 />
               </div>
@@ -273,21 +359,28 @@ export default function Home() {
                   name="url"
                   type="url"
                   required
+                  defaultValue={editingService?.url || ""}
                   style={{
                     padding: "0.5rem",
                     width: "100%",
                     borderRadius: "4px",
-                    border: "1px solid #ccc",
+                    border: "1px solid #55595b",
+                    backgroundColor: "#151617",
+                    color: "#f1f1ef",
                   }}
                 />
               </div>
               <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingService(null);
+                  }}
                   style={{
                     padding: "0.5rem 1rem",
-                    backgroundColor: "#eee",
+                    backgroundColor: "#3a3c3e",
+                    color: "#f1f1ef",
                     border: "none",
                     borderRadius: "4px",
                     cursor: "pointer",
@@ -299,14 +392,14 @@ export default function Home() {
                   type="submit"
                   style={{
                     padding: "0.5rem 1rem",
-                    backgroundColor: "#0070f3",
-                    color: "white",
+                    backgroundColor: "#dededb",
+                    color: "#171819",
                     border: "none",
                     borderRadius: "4px",
                     cursor: "pointer",
                   }}
                 >
-                  Add Service
+                  {editingService ? "Save Changes" : "Add Service"}
                 </button>
               </div>
             </form>

@@ -11,7 +11,9 @@ export default function LoadingSpinner({ message }) {
         gap: "0.75rem",
         padding: "2rem",
         fontFamily: "sans-serif",
-        color: "#444",
+        color: "#e1e1df",
+        backgroundColor: "#111213",
+        minHeight: "100vh",
       }}
     >
       <span className="spinner" aria-hidden="true" />
@@ -21,8 +23,8 @@ export default function LoadingSpinner({ message }) {
           width: 1.25rem;
           height: 1.25rem;
           flex: 0 0 auto;
-          border: 3px solid #d7e3f5;
-          border-top-color: #0070f3;
+          border: 3px solid #45484a;
+          border-top-color: #e1e1df;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }
