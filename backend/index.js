@@ -86,7 +86,7 @@ setInterval(async () => {
     );
   }
   console.log("Status check complete.");
-}, 60000); // Every 60 seconds
+}, 60 * 60 * 1000); // Every hour
 
 // Routes
 app.get("/health", async (req, res) => {
