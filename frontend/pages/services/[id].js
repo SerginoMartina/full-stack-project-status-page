@@ -67,28 +67,31 @@ export default function ServiceDetails() {
         }}
       >
         <h1 style={{ margin: 0 }}>{service.name}</h1>
-        <nav>
           <a
             href="/"
             style={{
-              marginRight: "1.5rem",
+              padding: "0.6rem 1rem",
+              borderRadius: "8px",
+              backgroundColor: "#0070f3",
+              color: "white",
               textDecoration: "none",
-              color: "#666",
               fontWeight: "bold",
             }}
           >
-            Dashboard
+            ← Back to dashboard
           </a>
-          <a
-            href="/pings"
-            style={{ textDecoration: "none", color: "#666", fontWeight: "bold" }}
-          >
-            All Ping Logs
-          </a>
-        </nav>
       </div>
 
-      <p style={{ color: "#666", marginTop: 0 }}>{service.url}</p>
+      <p style={{ color: "#666", marginTop: 0 }}>
+        <a
+          href={service.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#0070f3", overflowWrap: "anywhere" }}
+        >
+          {service.url}
+        </a>
+      </p>
       <h2 style={{ marginBottom: "1rem" }}>Ping Logs</h2>
 
       {pings.length > 0 ? (

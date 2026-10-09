@@ -83,29 +83,6 @@ export default function Home() {
         }}
       >
         <h1 style={{ margin: 0 }}>🚀 Service Status Dashboard</h1>
-        <nav>
-          <a
-            href="/"
-            style={{
-              marginRight: "1.5rem",
-              textDecoration: "none",
-              color: "#0070f3",
-              fontWeight: "bold",
-            }}
-          >
-            Dashboard
-          </a>
-          <a
-            href="/pings"
-            style={{
-              textDecoration: "none",
-              color: "#666",
-              fontWeight: "bold",
-            }}
-          >
-            Ping Logs
-          </a>
-        </nav>
       </div>
 
       <div
@@ -141,17 +118,14 @@ export default function Home() {
         }}
       >
         {services.map((service) => (
-          <a
+          <article
             key={service.id}
-            href={`/services/${service.id}`}
             style={{
-              display: "block",
               padding: "1.5rem",
               backgroundColor: "white",
               borderRadius: "12px",
               boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               color: "inherit",
-              textDecoration: "none",
               borderLeft:
                 service.status === "online"
                   ? "8px solid #4caf50"
@@ -160,7 +134,14 @@ export default function Home() {
                     : "8px solid #ffeb3b",
             }}
           >
-            <h3 style={{ margin: "0 0 0.5rem 0" }}>{service.name}</h3>
+            <h3 style={{ margin: "0 0 0.5rem 0" }}>
+              <a
+                href={`/services/${service.id}`}
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                {service.name}
+              </a>
+            </h3>
             <p
               style={{
                 fontSize: "0.9rem",
@@ -168,7 +149,19 @@ export default function Home() {
                 marginBottom: "1rem",
               }}
             >
-              {service.url}
+              <a
+                href={service.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "#0070f3",
+                  overflowWrap: "anywhere",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                {service.url}
+              </a>
             </p>
             <div
               style={{
@@ -203,7 +196,23 @@ export default function Home() {
                 {new Date(service.last_checked).toLocaleTimeString()}
               </small>
             </div>
-          </a>
+            <a
+              href={`/services/${service.id}`}
+              style={{
+                display: "inline-block",
+                marginTop: "1rem",
+                padding: "0.5rem 0.8rem",
+                borderRadius: "6px",
+                backgroundColor: "#0070f3",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+              }}
+            >
+              Read logs
+            </a>
+          </article>
         ))}
       </div>
 
