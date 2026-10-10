@@ -152,7 +152,7 @@ setInterval(async () => {
   } catch (err) {
     console.error("Service status check failed:", err);
   }
-}, 60 * 60 * 1000); // Every hour
+}, 5 * 60 * 1000); // Every 5 minutes
 
 // Routes
 app.get("/health", async (req, res) => {
